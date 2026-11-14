@@ -1,0 +1,79 @@
+# DGAHunter pipeline parameters.
+# Every stage in dvc.yaml declares the keys it depends on, so changing a value
+# here re-runs exactly the stages that use it (`dvc repro`).
+
+seed: 42
+
+ingest:
+  # Benign domains: Tranco top-1M list (research-oriented, manipulation-resistant ranking).
+  tranco_url: https://tranco-list.eu/top-1m.csv.zip
+  benign_top_n: 200000          # take the top-N ranked Tranco domains
+  # DGA domains: 25 families x 13.5k domains extracted from the 360 Netlab DGA feed
+  # (Cucchiarelli et al., 2021). Pinned to a commit for reproducibility.
+  dga_url: https://raw.githubusercontent.com/chrmor/DGA_domains_dataset/9dcc29e5cc644fdfd99d82a3abec993c15bbc7bc/dga_domains_full.csv
+  # If Tranco is unreachable, fall back to the Alexa benign rows of the same dataset.
+  allow_benign_fallback: true
+  timeout_s: 120
+
+validate:
+  min_rows_per_class: 10000
+  min_families: 10
+  max_domain_len: 253
+  max_null_fraction: 0.0
+  max_duplicate_fraction: 0.05
+  allowed_chars: "abcdefghijklmnopqrstuvwxyz0123456789.-_"
+
+preprocess:
+  # Families never seen in training; evaluated separately to measure generalization.
+  holdout_families: [matsnu, pykspa, symmi]
+  benign_sample: 100000         # benign domains used after cleaning
+  dga_per_family: 4000          # DGA domains sampled per (non-holdout) family
+  holdout_per_family: 2000
+  val_size: 0.15
+  test_size: 0.15
+  min_label_len: 2              # drop labels shorter than this after suffix stripping
+  max_label_len: 63
+
+baseline:
+  ngram_min: 1
+  ngram_max: 4
+  max_features: 100000
+  C: 4.0
+  max_iter: 2000
+
+charlm:
+  # Small GPT-style causal transformer trained ONLY on benign domains.
+  max_len: 64
+  d_model: 128
+  n_layers: 3
+  n_heads: 4
+  dropout: 0.1
+  batch_size: 256
+  epochs: 4
+  lr: 0.002
+  weight_decay: 0.01
+  device: auto                  # auto | cpu | cuda | mps
+
+lora:
+  enabled: true                 # set false to skip the transformer stage on slow machines
+  model_name: google/canine-s
+  max_len: 64
+  train_samples: 24000          # subsample of the training split (CPU/MPS-friendly)
+  epochs: 1
+  batch_size: 32
+  lr: 0.0005
+  lora_r: 8
+  lora_alpha: 16
+  lora_dropout: 0.1
+  target_modules: [query, value]
+  device: auto                  # auto = cuda, else cpu (mps is skipped: CANINE backward fails on it)
+
+evaluate:
+  risk_thresholds: [0.5, 0.85]  # Low < 0.5 <= Medium < 0.85 <= High
+
+mlflow:
+  experiment_name: dgahunter
+  registered_model_name: dgahunter-detector
+  promote_stage: Staging
+  # Model selected for promotion: the main model with the best validation ROC-AUC
+  candidates: [charlm, canine_lora]

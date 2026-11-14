@@ -1,0 +1,329 @@
+schema: '2.0'
+stages:
+  ingest:
+    cmd: python -m src.data.ingest
+    deps:
+    - path: src/data/ingest.py
+      hash: md5
+      md5: b327497fd23c6190a1c43b6b17377b9f
+      size: 3710
+    params:
+      params.yaml:
+        ingest:
+          tranco_url: https://tranco-list.eu/top-1m.csv.zip
+          benign_top_n: 200000
+          dga_url: 
+            https://raw.githubusercontent.com/chrmor/DGA_domains_dataset/9dcc29e5cc644fdfd99d82a3abec993c15bbc7bc/dga_domains_full.csv
+          allow_benign_fallback: true
+          timeout_s: 120
+    outs:
+    - path: data/raw
+      hash: md5
+      md5: b99830452e635e801219a7c198894661.dir
+      size: 19121285
+      nfiles: 2
+  validate:
+    cmd: python -m src.data.validate
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: b99830452e635e801219a7c198894661.dir
+      size: 19121285
+      nfiles: 2
+    - path: src/data/validate.py
+      hash: md5
+      md5: b013a7c8789d945784cc0db31daa48b0
+      size: 4527
+    params:
+      params.yaml:
+        validate:
+          min_rows_per_class: 10000
+          min_families: 10
+          max_domain_len: 253
+          max_null_fraction: 0.0
+          max_duplicate_fraction: 0.05
+          allowed_chars: abcdefghijklmnopqrstuvwxyz0123456789.-_
+    outs:
+    - path: reports/validation_raw.json
+      hash: md5
+      md5: 6ffd319af6ea6c206baaa01abc0bca98
+      size: 1568
+  preprocess:
+    cmd: python -m src.data.preprocess
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: b99830452e635e801219a7c198894661.dir
+      size: 19121285
+      nfiles: 2
+    - path: reports/validation_raw.json
+      hash: md5
+      md5: 6ffd319af6ea6c206baaa01abc0bca98
+      size: 1568
+    - path: src/data/preprocess.py
+      hash: md5
+      md5: 534ec1033d2e5f9a9fa660705ec89278
+      size: 4452
+    - path: src/data/validate.py
+      hash: md5
+      md5: b013a7c8789d945784cc0db31daa48b0
+      size: 4527
+    params:
+      params.yaml:
+        preprocess:
+          holdout_families:
+          - matsnu
+          - pykspa
+          - symmi
+          benign_sample: 100000
+          dga_per_family: 4000
+          holdout_per_family: 2000
+          val_size: 0.15
+          test_size: 0.15
+          min_label_len: 2
+          max_label_len: 63
+        seed: 42
+        validate.allowed_chars: abcdefghijklmnopqrstuvwxyz0123456789.-_
+    outs:
+    - path: data/processed
+      hash: md5
+      md5: 98285b3179e25582c0e87dab83639ff7.dir
+      size: 7442907
+      nfiles: 5
+    - path: reports/validation_splits.json
+      hash: md5
+      md5: 7f36e95d25b287e0382663b02b482ef0
+      size: 1457
+  train_baseline:
+    cmd: python -m src.models.baseline
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: 98285b3179e25582c0e87dab83639ff7.dir
+      size: 7442907
+      nfiles: 5
+    - path: src/models/baseline.py
+      hash: md5
+      md5: 8eb8ce402b10964bc5906ac7658fb181
+      size: 3438
+    - path: src/models/metrics.py
+      hash: md5
+      md5: 0f8b611a10bbed835b560deea87c8a7c
+      size: 4427
+    params:
+      params.yaml:
+        baseline:
+          ngram_min: 1
+          ngram_max: 4
+          max_features: 100000
+          C: 4.0
+          max_iter: 2000
+        seed: 42
+    outs:
+    - path: metrics/baseline.json
+      hash: md5
+      md5: 3d0fbf55c680f85e92b31316be921c6f
+      size: 843
+    - path: models/baseline
+      hash: md5
+      md5: de802ae02a426b7eb42a70ada17eea68.dir
+      size: 4185230
+      nfiles: 2
+    - path: predictions/baseline.csv
+      hash: md5
+      md5: 094b56c0613d633425eb5ea5c2106cc6
+      size: 2895922
+  train_charlm:
+    cmd: python -m src.models.charlm
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: 98285b3179e25582c0e87dab83639ff7.dir
+      size: 7442907
+      nfiles: 5
+    - path: src/models/charlm.py
+      hash: md5
+      md5: ddfc2d18bd92d4af7aea346f16363dfd
+      size: 12571
+    - path: src/models/metrics.py
+      hash: md5
+      md5: 0f8b611a10bbed835b560deea87c8a7c
+      size: 4427
+    - path: src/models/pyfunc.py
+      hash: md5
+      md5: f4a3d35ca244d468d4ce78bb8b1c448d
+      size: 4072
+    params:
+      params.yaml:
+        charlm:
+          max_len: 64
+          d_model: 128
+          n_layers: 3
+          n_heads: 4
+          dropout: 0.1
+          batch_size: 256
+          epochs: 4
+          lr: 0.002
+          weight_decay: 0.01
+          device: auto
+        evaluate.risk_thresholds:
+        - 0.5
+        - 0.85
+        seed: 42
+    outs:
+    - path: metrics/charlm.json
+      hash: md5
+      md5: a6bb6e6051aab1c62e9ca24a33b5d989
+      size: 1110
+    - path: models/charlm
+      hash: md5
+      md5: 9f00d027cdc9cfa9487818b12e6b7231.dir
+      size: 2464559
+      nfiles: 3
+    - path: predictions/charlm.csv
+      hash: md5
+      md5: b1ac51305839b3319559e46f6af40586
+      size: 2280878
+    - path: reports/charlm_training_curve.png
+      hash: md5
+      md5: 54b5d78f90964c430893d47f5fb1449b
+      size: 31830
+  train_canine_lora:
+    cmd: python -m src.models.canine_lora
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: 98285b3179e25582c0e87dab83639ff7.dir
+      size: 7442907
+      nfiles: 5
+    - path: src/models/canine_lora.py
+      hash: md5
+      md5: 9a41e87314bf74858e9ed13820bef905
+      size: 9207
+    - path: src/models/metrics.py
+      hash: md5
+      md5: 0f8b611a10bbed835b560deea87c8a7c
+      size: 4427
+    - path: src/models/pyfunc.py
+      hash: md5
+      md5: f4a3d35ca244d468d4ce78bb8b1c448d
+      size: 4072
+    params:
+      params.yaml:
+        evaluate.risk_thresholds:
+        - 0.5
+        - 0.85
+        lora:
+          enabled: true
+          model_name: google/canine-s
+          max_len: 64
+          train_samples: 24000
+          epochs: 1
+          batch_size: 32
+          lr: 0.0005
+          lora_r: 8
+          lora_alpha: 16
+          lora_dropout: 0.1
+          target_modules:
+          - query
+          - value
+          device: auto
+        seed: 42
+    outs:
+    - path: metrics/canine_lora.json
+      hash: md5
+      md5: c7692e154e4bff5c2e1cb8f984fa13c5
+      size: 942
+    - path: models/canine_lora
+      hash: md5
+      md5: 194bb3ecae556cd2e08c9d6139aff60e.dir
+      size: 1412601
+      nfiles: 5
+    - path: predictions/canine_lora.csv
+      hash: md5
+      md5: 07cfa845f537d9ac4660436f9025485f
+      size: 2350441
+  evaluate:
+    cmd: python -m src.evaluate
+    deps:
+    - path: predictions/baseline.csv
+      hash: md5
+      md5: 094b56c0613d633425eb5ea5c2106cc6
+      size: 2895922
+    - path: predictions/canine_lora.csv
+      hash: md5
+      md5: 07cfa845f537d9ac4660436f9025485f
+      size: 2350441
+    - path: predictions/charlm.csv
+      hash: md5
+      md5: b1ac51305839b3319559e46f6af40586
+      size: 2280878
+    - path: src/evaluate.py
+      hash: md5
+      md5: 236ac3ae9feb489ebade6e19746cb3f1
+      size: 4800
+    - path: src/models/metrics.py
+      hash: md5
+      md5: 0f8b611a10bbed835b560deea87c8a7c
+      size: 4427
+    params:
+      params.yaml:
+        preprocess.holdout_families:
+        - matsnu
+        - pykspa
+        - symmi
+        seed: 42
+    outs:
+    - path: metrics/evaluation.json
+      hash: md5
+      md5: 664b8723661821c635b480f506e824ef
+      size: 698
+    - path: reports/model_comparison.json
+      hash: md5
+      md5: 4ce50bea011ab896d921c483694ee3cd
+      size: 6923
+    - path: reports/model_comparison.md
+      hash: md5
+      md5: f0385af79990530dc140c47f36882a46
+      size: 1396
+    - path: reports/roc_holdout.png
+      hash: md5
+      md5: a6a1bc2a48c0d480178704588d81f7d1
+      size: 49279
+    - path: reports/roc_test.png
+      hash: md5
+      md5: 4104b15560b3ba053b1166d2b629422f
+      size: 50769
+  register:
+    cmd: python -m src.register
+    deps:
+    - path: metrics/canine_lora.json
+      hash: md5
+      md5: c7692e154e4bff5c2e1cb8f984fa13c5
+      size: 942
+    - path: metrics/charlm.json
+      hash: md5
+      md5: a6bb6e6051aab1c62e9ca24a33b5d989
+      size: 1110
+    - path: metrics/evaluation.json
+      hash: md5
+      md5: 664b8723661821c635b480f506e824ef
+      size: 698
+    - path: src/register.py
+      hash: md5
+      md5: fdfdbfa32a380d548e64ed69a8ece31d
+      size: 2629
+    params:
+      params.yaml:
+        mlflow:
+          experiment_name: dgahunter
+          registered_model_name: dgahunter-detector
+          promote_stage: Staging
+          candidates:
+          - charlm
+          - canine_lora
+    outs:
+    - path: reports/registry.json
+      hash: md5
+      md5: d0e2bd98d73ffae1f6fd4f2656279e0b
+      size: 280

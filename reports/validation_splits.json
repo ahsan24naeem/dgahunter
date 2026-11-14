@@ -1,0 +1,84 @@
+{
+  "checks": [
+    {
+      "check": "no_overlap_train_val",
+      "detail": 0,
+      "passed": true
+    },
+    {
+      "check": "no_overlap_train_test",
+      "detail": 0,
+      "passed": true
+    },
+    {
+      "check": "no_overlap_train_holdout",
+      "detail": 0,
+      "passed": true
+    },
+    {
+      "check": "no_overlap_val_test",
+      "detail": 0,
+      "passed": true
+    },
+    {
+      "check": "no_overlap_val_holdout",
+      "detail": 0,
+      "passed": true
+    },
+    {
+      "check": "no_overlap_test_holdout",
+      "detail": 0,
+      "passed": true
+    },
+    {
+      "check": "holdout_families_absent_from_train",
+      "detail": [],
+      "passed": true
+    },
+    {
+      "check": "train_no_nulls",
+      "detail": 0,
+      "passed": true
+    },
+    {
+      "check": "train_both_classes",
+      "detail": {
+        "0": 70000,
+        "1": 61600
+      },
+      "passed": true
+    },
+    {
+      "check": "val_no_nulls",
+      "detail": 0,
+      "passed": true
+    },
+    {
+      "check": "val_both_classes",
+      "detail": {
+        "0": 15000,
+        "1": 13200
+      },
+      "passed": true
+    },
+    {
+      "check": "test_no_nulls",
+      "detail": 0,
+      "passed": true
+    },
+    {
+      "check": "test_both_classes",
+      "detail": {
+        "0": 15000,
+        "1": 13200
+      },
+      "passed": true
+    },
+    {
+      "check": "holdout_no_nulls",
+      "detail": 0,
+      "passed": true
+    }
+  ],
+  "passed": true
+}

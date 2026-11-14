@@ -1,0 +1,17 @@
+{
+  "baseline_holdout_detection_rate": 0.793,
+  "baseline_test_f1": 0.9181491973559962,
+  "baseline_test_roc_auc": 0.9762217626262626,
+  "best_model_by_test_roc_auc": "baseline",
+  "canine_lora_holdout_detection_rate": 0.6783333333333333,
+  "canine_lora_test_f1": 0.8591111819050653,
+  "canine_lora_test_roc_auc": 0.9290775328282828,
+  "charlm_holdout_detection_rate": 0.5256666666666666,
+  "charlm_test_f1": 0.8128852654603301,
+  "charlm_test_roc_auc": 0.8968750934343435,
+  "hybrid_classifier_component": "canine_lora",
+  "hybrid_holdout_detection_rate": 0.7175,
+  "hybrid_test_f1": 0.8676781105810589,
+  "hybrid_test_roc_auc": 0.9345769191919192,
+  "run_id": "2e608ee0cc6b48b68f307eba98b4fd1d"
+}

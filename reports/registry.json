@@ -1,0 +1,9 @@
+{
+  "model_type": "canine_lora",
+  "registered_model": "dgahunter-detector",
+  "source_run_id": "b50223f7a6c448d5a9d3d7957eebd072",
+  "stage": "Staging",
+  "tracking_uri": "https://dagshub.com/ahsan24naeem/dgahunter.mlflow",
+  "val_roc_auc": 0.9286868838383839,
+  "version": "1"
+}

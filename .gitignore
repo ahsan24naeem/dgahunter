@@ -1,0 +1,32 @@
+# --- data & models are versioned by DVC, never by git ---
+/data/raw
+/data/processed
+/models
+/predictions
+*.pt
+*.joblib
+*.safetensors
+*.bin
+*.csv
+*.zip
+!tests/fixtures/*.csv
+
+# --- MLflow local fallback store (real tracking lives on DagsHub) ---
+mlruns/
+mlflow.db
+mlartifacts/
+
+# --- secrets ---
+.env
+.dvc/config.local
+
+# --- Python / tooling ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/
+.DS_Store
+.idea/
+.vscode/

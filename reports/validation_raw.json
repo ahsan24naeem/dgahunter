@@ -1,0 +1,91 @@
+{
+  "checks": [
+    {
+      "check": "schema_columns",
+      "detail": [
+        "domain",
+        "label",
+        "family",
+        "source"
+      ],
+      "passed": true
+    },
+    {
+      "check": "schema_dtypes",
+      "detail": {
+        "domain": "object",
+        "family": "object",
+        "label": "int64",
+        "source": "object"
+      },
+      "passed": true
+    },
+    {
+      "check": "null_fraction",
+      "detail": {
+        "domain": 0.0,
+        "family": 0.0,
+        "label": 0.0,
+        "source": 0.0
+      },
+      "passed": true
+    },
+    {
+      "check": "label_range",
+      "detail": [
+        0,
+        1
+      ],
+      "passed": true
+    },
+    {
+      "check": "domain_length_range",
+      "detail": {
+        "max": 66,
+        "mean": 16.36,
+        "min": 4
+      },
+      "passed": true
+    },
+    {
+      "check": "allowed_characters",
+      "detail": {
+        "examples": [],
+        "invalid_fraction": 0.0
+      },
+      "passed": true
+    },
+    {
+      "check": "has_tld",
+      "detail": {
+        "fraction_with_dot": 1.0
+      },
+      "passed": true
+    },
+    {
+      "check": "min_rows_per_class",
+      "detail": {
+        "0": 200000,
+        "1": 337500
+      },
+      "passed": true
+    },
+    {
+      "check": "min_dga_families",
+      "detail": 25,
+      "passed": true
+    },
+    {
+      "check": "duplicate_fraction",
+      "detail": 0.0,
+      "passed": true
+    },
+    {
+      "check": "label_conflicts_le_0.1pct",
+      "detail": 0,
+      "passed": true
+    }
+  ],
+  "n_rows": 537500,
+  "passed": true
+}

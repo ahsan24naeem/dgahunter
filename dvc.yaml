@@ -1,0 +1,129 @@
+stages:
+  ingest:
+    cmd: python -m src.data.ingest
+    deps:
+      - src/data/ingest.py
+    params:
+      - ingest
+    outs:
+      - data/raw
+
+  validate:
+    cmd: python -m src.data.validate
+    deps:
+      - src/data/validate.py
+      - data/raw
+    params:
+      - validate
+    outs:
+      - reports/validation_raw.json:
+          cache: false
+
+  preprocess:
+    cmd: python -m src.data.preprocess
+    deps:
+      - src/data/preprocess.py
+      - src/data/validate.py
+      - data/raw
+      - reports/validation_raw.json   # only runs after raw validation passed
+    params:
+      - seed
+      - preprocess
+      - validate.allowed_chars
+    outs:
+      - data/processed
+      - reports/validation_splits.json:
+          cache: false
+
+  train_baseline:
+    cmd: python -m src.models.baseline
+    deps:
+      - src/models/baseline.py
+      - src/models/metrics.py
+      - data/processed
+    params:
+      - seed
+      - baseline
+    outs:
+      - models/baseline
+      - predictions/baseline.csv
+    metrics:
+      - metrics/baseline.json:
+          cache: false
+
+  train_charlm:
+    cmd: python -m src.models.charlm
+    deps:
+      - src/models/charlm.py
+      - src/models/metrics.py
+      - src/models/pyfunc.py
+      - data/processed
+    params:
+      - seed
+      - charlm
+      - evaluate.risk_thresholds
+    outs:
+      - models/charlm
+      - predictions/charlm.csv
+    metrics:
+      - metrics/charlm.json:
+          cache: false
+    plots:
+      - reports/charlm_training_curve.png:
+          cache: false
+
+  train_canine_lora:
+    cmd: python -m src.models.canine_lora
+    deps:
+      - src/models/canine_lora.py
+      - src/models/metrics.py
+      - src/models/pyfunc.py
+      - data/processed
+    params:
+      - seed
+      - lora
+      - evaluate.risk_thresholds
+    outs:
+      - models/canine_lora
+      - predictions/canine_lora.csv
+    metrics:
+      - metrics/canine_lora.json:
+          cache: false
+
+  evaluate:
+    cmd: python -m src.evaluate
+    deps:
+      - src/evaluate.py
+      - src/models/metrics.py
+      - predictions/baseline.csv
+      - predictions/charlm.csv
+      - predictions/canine_lora.csv
+    params:
+      - seed
+      - preprocess.holdout_families
+    outs:
+      - reports/model_comparison.json:
+          cache: false
+      - reports/model_comparison.md:
+          cache: false
+    metrics:
+      - metrics/evaluation.json:
+          cache: false
+    plots:
+      - reports/roc_test.png:
+          cache: false
+      - reports/roc_holdout.png:
+          cache: false
+
+  register:
+    cmd: python -m src.register
+    deps:
+      - src/register.py
+      - metrics/charlm.json
+      - metrics/canine_lora.json
+      - metrics/evaluation.json
+    params:
+      - mlflow
+    outs:
+      - reports/registry.json:
+          cache: false

@@ -1,0 +1,17 @@
+# Python 3.11 or 3.12 (3.11 recommended)
+torch==2.5.1
+transformers==4.49.0
+peft==0.14.0
+mlflow==2.22.5          # pinned < 3.0: DagsHub's MLflow server speaks the 2.x API
+dvc==3.67.1
+scikit-learn==1.9.1
+pandas==2.3.3
+numpy==2.0.2
+tldextract==5.4.0
+matplotlib==3.11.2
+requests==2.34.2
+SQLAlchemy>=2.0,<2.1   # mlflow 2.x is incompatible with SQLAlchemy 2.1
+PyYAML==6.0.3
+tabulate==0.10.0
+joblib==1.6.0
+pytest==9.2.0
